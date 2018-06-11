@@ -84,9 +84,6 @@
 (defn plot-points
   "Adds data (POINTS) to the spec and generates an SVG"
   [points output-width output-height]
-  (println "my points:" points)
-  (println "my dims:" output-width output-height)
-
   (svg-to-javafx-group  (-> (plot-spec output-width output-height)
                             (assoc-in  [:data 0 :values] points)
                              (viz/svg-plot2d-cartesian)
@@ -135,12 +132,10 @@
 
 (defmethod handle-event :resize-width
   [state {:keys [fn-fx/includes]}]
-  (println "new width:"  (get-in includes [::graph :width]))
   (assoc-in state [:width] (get-in includes [::graph :width])))
 
 (defmethod handle-event :resize-height
   [state {:keys [fn-fx/includes]}]
-  (println "new height:"  (get-in includes [::graph :height]))
   (assoc-in state [:height] (get-in includes [::graph :height])))
 
 ;; ## Stage

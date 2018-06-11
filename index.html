@@ -2935,8 +2935,6 @@ the output SVGs to something that can be put into a Group in JavaFX. </p>
              :layout  viz/svg-scatter-plot}]})</pre></td></tr><tr><td class="docs"><p>Adds data (POINTS) to the spec and generates an SVG</p>
 </td><td class="codes"><pre class="brush: clojure">(defn plot-points
   [points output-width output-height]
-  (println &quot;my points:&quot; points)
-  (println &quot;my dims:&quot; output-width output-height)
   (svg-to-javafx-group  (-&gt; (plot-spec output-width output-height)
                             (assoc-in  [:data 0 :values] points)
                              (viz/svg-plot2d-cartesian)
@@ -2981,11 +2979,9 @@ and redraw the plot when it changes</p>
                       (clicky-graph args)])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod handle-event :resize-width
   [state {:keys [fn-fx/includes]}]
-  (println &quot;new width:&quot;  (get-in includes [::graph :width]))
   (assoc-in state [:width] (get-in includes [::graph :width])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod handle-event :resize-height
   [state {:keys [fn-fx/includes]}]
-  (println &quot;new height:&quot;  (get-in includes [::graph :height]))
   (assoc-in state [:height] (get-in includes [::graph :height])))</pre></td></tr><tr><td class="docs"><h2>Stage</h2>
 
 <p>the JavaFX top level container that stands for a window
