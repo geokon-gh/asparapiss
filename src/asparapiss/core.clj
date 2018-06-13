@@ -11,7 +11,11 @@
   (:require [fn-fx.fx-dom :as dom] ;; The JavaFX libraries
             [fn-fx.diff :refer [component defui render should-update?]]
             [fn-fx.controls :as ui]
+            [clojure.math.numeric-tower :as math]
+            [clojure.core.matrix :as matrix]
+            [clojure.core.matrix.linear :as matrix-linear]
             [thi.ng.geom.core :as g] ;; The graphing libraires
+            [thi.ng.math.core :as m]
             [thi.ng.geom.viz.core :as viz]
             [thi.ng.geom.svg.core :as svgthing])
   (:import  [afester.javafx.svg SvgLoader]))
@@ -46,6 +50,53 @@
   [svg-xml-string]
   (.loadSvg (SvgLoader.) (string->stream svg-xml-string)))
 
+;; ## Vandermonde Matrix
+;; We want to solve for a polynomial that will fit all the given points
+
+;; set the core.matrix backend
+(matrix/set-current-implementation :vectorz)
+
+;; the polynomial for each point is of the form:
+;; a0 + a1 x + a2 x^2 + a3 x^3 + ... = y
+;; So given an *x* we need to generate the polynomials x, x^2, x^3 ...
+(defn index-vector
+  "Take a vector of numbers [a b c d ..] and makes an indexed-pair version
+  [[0 a] [1 b] [2 c] [3 d] ..]"
+  ([vector]
+   (index-vector vector (count vector)))
+  ([vector length]
+   (map (fn [i] [i (get vector i)]) (range 0  length))))
+
+(defn polynomial-vector
+  "Given an **x**, generate a vector of [x x^2 x^3 .. x^LENGTH]"
+  [x length]
+  (map #(math/expt x %) (range 0 length)))
+
+(defn polynomial-row
+  "Wrapper for the previous function that puts it in a row-matrix"
+  [x length]
+  (matrix/row-matrix (polynomial-vector x length)))
+
+(defn vandermonde-matrix
+  "Take a vector of x's and build a vandermonde matrix"
+  [x]
+  (let [length (count x)
+        vandermonde-rows (map #(polynomial-row % length) x)]
+    (matrix/matrix (reduce (fn [matrix next-row] (matrix/join matrix next-row)) vandermonde-rows))))
+
+(defn fit-polynomial
+  "Given several points, return a polynomial function (given an x, returns a y)"
+  [points]
+  (let [xs (map first points)
+        ys (map second points)
+        polynomial-factors (matrix-linear/solve (vandermonde-matrix xs) (matrix/array ys))
+        indexed-polynomial-factors (index-vector (matrix/to-nested-vectors polynomial-factors))]
+    (fn [x] [x (reduce
+                (fn [accumulated-value next-exponent]
+                  (+ accumulated-value
+                     (* (second next-exponent) (math/expt x (first next-exponent)))))
+                0
+                indexed-polynomial-factors)])))
 
 ;; ## Plots
 
@@ -53,7 +104,7 @@
   "Given a size (WIDTH HEIGHT) the output *spec* describes how the plot looks.
   More detail are in **geom-viz**.
   The data has been left initialized"
-  [width height]
+  [points width height]
   {:x-axis (viz/linear-axis
             {:domain [0 width]
              :range  [0 width]
@@ -73,19 +124,20 @@
    :grid   {:attribs {:stroke "#caa"}
             :minor-x false
             :minor-y false}
-   :data   [;; {:values  (map (juxt identity #(Math/sqrt %)) (range 0 200 2))
-            ;;  :attribs {:fill "#0af" :stroke "none"}
-            ;;  :layout  viz/svg-scatter-plot}
+   :data   [{:values  (map (fit-polynomial points) (range 10000))
+             :attribs {:fill "none" :stroke "#0af" :stroke-width 2.25}
+             :layout  viz/svg-line-plot}
             {:values  nil
-             :attribs {:fill "none" :stroke "#f60"}
+             :attribs {:fill "none" :stroke "#f60" :stroke-width 2.25}
              :shape   (viz/svg-triangle-down 6)
              :layout  viz/svg-scatter-plot}]})
 
 (defn plot-points
   "Adds data (POINTS) to the spec and generates an SVG"
   [points output-width output-height]
-  (svg-to-javafx-group  (-> (plot-spec output-width output-height)
-                            (assoc-in  [:data 0 :values] points)
+  (print points)
+  (svg-to-javafx-group  (-> (plot-spec points output-width output-height)
+                            (assoc-in  [:data 1 :values] points)
                              (viz/svg-plot2d-cartesian)
                              (#(svgthing/svg {:width output-width
                                               :height output-height}
@@ -163,7 +215,7 @@
   []
   (let [data-state (atom {:width 500.0
                           :height 500.0
-                          :points []})
+                          :points [[0 0]]})
         handler-fn (fn [event]
                      (try
                        (swap! data-state handle-event event)
