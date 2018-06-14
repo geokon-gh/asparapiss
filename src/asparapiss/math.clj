@@ -31,13 +31,16 @@
   (matrix/row-matrix (polynomial-vector x length)))
 
 (defn vandermonde-matrix
-  "Take a vector of x's and build a vandermonde matrix"
-  [x]
-  (let [length (count x)
-        vandermonde-rows (map #(polynomial-row % length) x)]
-    (matrix/matrix
-     (reduce (fn [matrix next-row] (matrix/join matrix next-row))
-             vandermonde-rows))))
+  "Take a vector of x's and build a vandermonde matrix of polynomials
+  of a given degree. By default the degree matches the number of points.
+  ie. it's square"
+  ([x]
+   (vandermonde-matrix x (count x)))
+  ([x degree]
+   (let [vandermonde-rows (map #(polynomial-row % degree) x)]
+     (matrix/matrix
+      (reduce (fn [matrix next-row] (matrix/join matrix next-row))
+              vandermonde-rows)))))
 
 (defn fit-polynomial
   "Given several points, return a polynomial function (given an x, returns a y)"

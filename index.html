@@ -3008,14 +3008,17 @@ So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
   (map #(math/expt x %) (range 0 length)))</pre></td></tr><tr><td class="docs"><p>Wrapper for the previous function that puts it in a row-matrix</p>
 </td><td class="codes"><pre class="brush: clojure">(defn polynomial-row
   [x length]
-  (matrix/row-matrix (polynomial-vector x length)))</pre></td></tr><tr><td class="docs"><p>Take a vector of x's and build a vandermonde matrix</p>
+  (matrix/row-matrix (polynomial-vector x length)))</pre></td></tr><tr><td class="docs"><p>Take a vector of x's and build a vandermonde matrix of polynomials
+  of a given degree. By default the degree matches the number of points.
+  ie. it's square</p>
 </td><td class="codes"><pre class="brush: clojure">(defn vandermonde-matrix
-  [x]
-  (let [length (count x)
-        vandermonde-rows (map #(polynomial-row % length) x)]
-    (matrix/matrix
-     (reduce (fn [matrix next-row] (matrix/join matrix next-row))
-             vandermonde-rows))))</pre></td></tr><tr><td class="docs"><p>Given several points, return a polynomial function (given an x, returns a y)</p>
+  ([x]
+   (vandermonde-matrix x (count x)))
+  ([x degree]
+   (let [vandermonde-rows (map #(polynomial-row % degree) x)]
+     (matrix/matrix
+      (reduce (fn [matrix next-row] (matrix/join matrix next-row))
+              vandermonde-rows)))))</pre></td></tr><tr><td class="docs"><p>Given several points, return a polynomial function (given an x, returns a y)</p>
 </td><td class="codes"><pre class="brush: clojure">(defn fit-polynomial
   [points]
   (let [xs (map first points)
