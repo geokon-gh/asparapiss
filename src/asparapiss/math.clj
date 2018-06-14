@@ -35,18 +35,25 @@
   [x]
   (let [length (count x)
         vandermonde-rows (map #(polynomial-row % length) x)]
-    (matrix/matrix (reduce (fn [matrix next-row] (matrix/join matrix next-row)) vandermonde-rows))))
+    (matrix/matrix
+     (reduce (fn [matrix next-row] (matrix/join matrix next-row))
+             vandermonde-rows))))
 
 (defn fit-polynomial
   "Given several points, return a polynomial function (given an x, returns a y)"
   [points]
   (let [xs (map first points)
         ys (map second points)
-        polynomial-factors (matrix-linear/solve (vandermonde-matrix xs) (matrix/array ys))
-        indexed-polynomial-factors (index-vector (matrix/to-nested-vectors polynomial-factors))]
+        polynomial-factors
+        (matrix-linear/solve (vandermonde-matrix xs)
+                             (matrix/array ys))
+        indexed-polynomial-factors
+        (index-vector (matrix/to-nested-vectors polynomial-factors))]
+
     (fn [x] [x (reduce
                 (fn [accumulated-value next-exponent]
                   (+ accumulated-value
-                     (* (second next-exponent) (math/expt x (first next-exponent)))))
+                     (* (second next-exponent)
+                        (math/expt x (first next-exponent)))))
                 0
                 indexed-polynomial-factors)])))

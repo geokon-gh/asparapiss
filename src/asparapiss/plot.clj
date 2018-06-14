@@ -42,12 +42,14 @@
   "Adds data (POINTS) to the spec and generates an SVG"
   [points output-width output-height]
   (print points)
-  (svg2jfx/svg-to-javafx-group  (-> (plot-spec points output-width output-height)
-                                    (assoc-in  [:data 0 :values] (map (math/fit-polynomial points) (range 10000)))
-                                    (assoc-in  [:data 1 :values] points)
-                                    (viz/svg-plot2d-cartesian)
-                                    (#(svgthing/svg {:width output-width
-                                                     :height output-height}
-                                                    %))
-                                    (svgthing/serialize))))
-
+  (svg2jfx/svg-to-javafx-group
+   (-> (plot-spec points output-width output-height)
+       (assoc-in  [:data 0 :values]
+                  (map (math/fit-polynomial points) (range 10000)))
+       (assoc-in  [:data 1 :values]
+                  points)
+       (viz/svg-plot2d-cartesian)
+       (#(svgthing/svg {:width output-width
+                        :height output-height}
+                       %))
+       (svgthing/serialize))))
