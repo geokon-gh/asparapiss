@@ -8,17 +8,11 @@
 ;; [**FranzXaver**](afester.github.io/FranzXaver/) is for converting
 ;; the output SVGs to something that can be put into a Group in JavaFX. 
 (ns asparapiss.core
-  (:require [fn-fx.fx-dom :as dom] ;; The JavaFX libraries
+  (:require [asparapiss.math :as math]
+            [asparapiss.plot :as plot]
+            [fn-fx.fx-dom :as dom] ;; The JavaFX libraries
             [fn-fx.diff :refer [component defui render should-update?]]
-            [fn-fx.controls :as ui]
-            [clojure.math.numeric-tower :as math]
-            [clojure.core.matrix :as matrix]
-            [clojure.core.matrix.linear :as matrix-linear]
-            [thi.ng.geom.core :as g] ;; The graphing libraires
-            [thi.ng.math.core :as m]
-            [thi.ng.geom.viz.core :as viz]
-            [thi.ng.geom.svg.core :as svgthing])
-  (:import  [afester.javafx.svg SvgLoader]))
+            [fn-fx.controls :as ui]))
 
 ;; # Globals
 
@@ -32,118 +26,6 @@
   (fn [state event]
     (:event event)))
 
-
-;; # Converting SVGs to JavaFX objects
-
-(defn string->stream
-  "Takes a string and turns it into an input stream"
-  ([s] (string->stream s "UTF-8"))
-  ([s encoding]
-   (-> s
-       (.getBytes encoding)
-       (java.io.ByteArrayInputStream.))))
-
-(defn svg-to-javafx-group
-  "Use the FranzXaver library to turn a string of XML describing an SVG 
-  into a JavaFX compatible Group Node (which shows up as a picture)
-  This is using Batik under the hood somehow"
-  [svg-xml-string]
-  (.loadSvg (SvgLoader.) (string->stream svg-xml-string)))
-
-;; ## Vandermonde Matrix
-;; We want to solve for a polynomial that will fit all the given points
-
-;; set the core.matrix backend
-(matrix/set-current-implementation :vectorz)
-
-;; the polynomial for each point is of the form:
-;; a0 + a1 x + a2 x^2 + a3 x^3 + ... = y
-;; So given an *x* we need to generate the polynomials x, x^2, x^3 ...
-(defn index-vector
-  "Take a vector of numbers [a b c d ..] and makes an indexed-pair version
-  [[0 a] [1 b] [2 c] [3 d] ..]"
-  ([vector]
-   (index-vector vector (count vector)))
-  ([vector length]
-   (map (fn [i] [i (get vector i)]) (range 0  length))))
-
-(defn polynomial-vector
-  "Given an **x**, generate a vector of [x x^2 x^3 .. x^LENGTH]"
-  [x length]
-  (map #(math/expt x %) (range 0 length)))
-
-(defn polynomial-row
-  "Wrapper for the previous function that puts it in a row-matrix"
-  [x length]
-  (matrix/row-matrix (polynomial-vector x length)))
-
-(defn vandermonde-matrix
-  "Take a vector of x's and build a vandermonde matrix"
-  [x]
-  (let [length (count x)
-        vandermonde-rows (map #(polynomial-row % length) x)]
-    (matrix/matrix (reduce (fn [matrix next-row] (matrix/join matrix next-row)) vandermonde-rows))))
-
-(defn fit-polynomial
-  "Given several points, return a polynomial function (given an x, returns a y)"
-  [points]
-  (let [xs (map first points)
-        ys (map second points)
-        polynomial-factors (matrix-linear/solve (vandermonde-matrix xs) (matrix/array ys))
-        indexed-polynomial-factors (index-vector (matrix/to-nested-vectors polynomial-factors))]
-    (fn [x] [x (reduce
-                (fn [accumulated-value next-exponent]
-                  (+ accumulated-value
-                     (* (second next-exponent) (math/expt x (first next-exponent)))))
-                0
-                indexed-polynomial-factors)])))
-
-;; ## Plots
-
-(defn plot-spec
-  "Given a size (WIDTH HEIGHT) the output *spec* describes how the plot looks.
-  More detail are in **geom-viz**.
-  The data has been left initialized"
-  [points width height]
-  {:x-axis (viz/linear-axis
-            {:domain [0 width]
-             :range  [0 width]
-             ;; puts the axis out of view (can't show the grid with no axis)
-             :pos    -100 
-             :major 100
-             })
-   :y-axis (viz/linear-axis
-            {:domain      [0 height]
-             :range       [0 height]
-             ;; puts the axis out of view (can't show the grid with no axis)
-             :pos         -100 
-             :label-dist  0
-             :major 100
-             :label-style {:text-anchor "end"}
-             })
-   :grid   {:attribs {:stroke "#caa"}
-            :minor-x false
-            :minor-y false}
-   :data   [{:values  (map (fit-polynomial points) (range 10000))
-             :attribs {:fill "none" :stroke "#0af" :stroke-width 2.25}
-             :layout  viz/svg-line-plot}
-            {:values  nil
-             :attribs {:fill "none" :stroke "#f60" :stroke-width 2.25}
-             :shape   (viz/svg-triangle-down 6)
-             :layout  viz/svg-scatter-plot}]})
-
-(defn plot-points
-  "Adds data (POINTS) to the spec and generates an SVG"
-  [points output-width output-height]
-  (print points)
-  (svg-to-javafx-group  (-> (plot-spec points output-width output-height)
-                            (assoc-in  [:data 1 :values] points)
-                             (viz/svg-plot2d-cartesian)
-                             (#(svgthing/svg {:width output-width
-                                              :height output-height}
-                                             %))
-                             (svgthing/serialize))))
-
 ;; ## ClickyGraph
 ;; The area of the window where you click to add point.
 ;; The points are accumulated into the state map
@@ -154,7 +36,7 @@
           (ui/pane
            :on-mouse-pressed {:event :mouse-click ;; this part is black-magic
                               :fn-fx/include {:fn-fx/event #{:x :y}}} 
-           :children [(plot-points points width height)])))
+           :children [(plot/plot-points points width height)])))
 
 (defmethod handle-event :mouse-click
   [state {:keys [fn-fx/includes]}]

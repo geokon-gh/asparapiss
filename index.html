@@ -2866,7 +2866,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>asparapiss -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="http://geokon-gh.github.io/asparapiss/">asparapiss</a></h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>Plot lines that fit points</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.4</td></tr><tr><td class="dep-name">net.mikera/core.matrix</td><td class="dotted"><hr /></td><td class="dep-version">0.62.0</td></tr><tr><td class="dep-name">net.mikera/vectorz-clj</td><td class="dotted"><hr /></td><td class="dep-version">0.47.0</td></tr><tr><td class="dep-name">halgari/fn-fx</td><td class="dotted"><hr /></td><td class="dep-version">0.4.0</td></tr><tr><td class="dep-name">com.github.afester.javafx/FranzXaver</td><td class="dotted"><hr /></td><td class="dep-version">0.1</td></tr><tr><td class="dep-name">thi.ng/geom-viz</td><td class="dotted"><hr /></td><td class="dep-version">0.0.908</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#asparapiss.core">asparapiss.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.core" name="asparapiss.core"><h1 class="project-name">asparapiss.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p><strong>JavaFX</strong> is used through the <a href="https://github.com/halgari/fn-fx"><strong>fn-fx</strong></a>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.4</td></tr><tr><td class="dep-name">net.mikera/core.matrix</td><td class="dotted"><hr /></td><td class="dep-version">0.62.0</td></tr><tr><td class="dep-name">net.mikera/vectorz-clj</td><td class="dotted"><hr /></td><td class="dep-version">0.47.0</td></tr><tr><td class="dep-name">halgari/fn-fx</td><td class="dotted"><hr /></td><td class="dep-version">0.4.0</td></tr><tr><td class="dep-name">com.github.afester.javafx/FranzXaver</td><td class="dotted"><hr /></td><td class="dep-version">0.1</td></tr><tr><td class="dep-name">thi.ng/geom-viz</td><td class="dotted"><hr /></td><td class="dep-version">0.0.908</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#asparapiss.core">asparapiss.core</a></li><li><a href="#asparapiss.svg2jfx">asparapiss.svg2jfx</a></li><li><a href="#asparapiss.math">asparapiss.math</a></li><li><a href="#asparapiss.plot">asparapiss.plot</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.core" name="asparapiss.core"><h1 class="project-name">asparapiss.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p><strong>JavaFX</strong> is used through the <a href="https://github.com/halgari/fn-fx"><strong>fn-fx</strong></a>
 library. When the application is run through <code>lein run</code> it should initialize
 the <strong>JavaFX</strong> GUI and <strong>fn-fx</strong> itself.</p>
 
@@ -2876,114 +2876,18 @@ is for making plots and other pretty SVG things</p>
 <p><a href="afester.github.io/FranzXaver/"><strong>FranzXaver</strong></a> is for converting
 the output SVGs to something that can be put into a Group in JavaFX. </p>
 </td><td class="codes"><pre class="brush: clojure">(ns asparapiss.core
-  (:require [fn-fx.fx-dom :as dom] ;; The JavaFX libraries
+  (:require [asparapiss.math :as math]
+            [asparapiss.plot :as plot]
+            [fn-fx.fx-dom :as dom] ;; The JavaFX libraries
             [fn-fx.diff :refer [component defui render should-update?]]
-            [fn-fx.controls :as ui]
-            [clojure.math.numeric-tower :as math]
-            [clojure.core.matrix :as matrix]
-            [clojure.core.matrix.linear :as matrix-linear]
-            [thi.ng.geom.core :as g] ;; The graphing libraires
-            [thi.ng.math.core :as m]
-            [thi.ng.geom.viz.core :as viz]
-            [thi.ng.geom.svg.core :as svgthing])
-  (:import  [afester.javafx.svg SvgLoader]))</pre></td></tr><tr><td class="docs"><h1>Globals</h1>
+            [fn-fx.controls :as ui]))</pre></td></tr><tr><td class="docs"><h1>Globals</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def main-font (ui/font :family &quot;Helvetica&quot; :size 20))</pre></td></tr><tr><td class="docs"><h1>Event Handler</h1>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This is the event handler multimethod through which all events go through.
   It will 'switch' on the <strong>:event</strong> key</p>
 </td><td class="codes"><pre class="brush: clojure">(defmulti handle-event
   (fn [state event]
-    (:event event)))</pre></td></tr><tr><td class="docs"><h1>Converting SVGs to JavaFX objects</h1>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Takes a string and turns it into an input stream</p>
-</td><td class="codes"><pre class="brush: clojure">(defn string-&gt;stream
-  ([s] (string-&gt;stream s &quot;UTF-8&quot;))
-  ([s encoding]
-   (-&gt; s
-       (.getBytes encoding)
-       (java.io.ByteArrayInputStream.))))</pre></td></tr><tr><td class="docs"><p>Use the FranzXaver library to turn a string of XML describing an SVG 
-  into a JavaFX compatible Group Node (which shows up as a picture)
-  This is using Batik under the hood somehow</p>
-</td><td class="codes"><pre class="brush: clojure">(defn svg-to-javafx-group
-  [svg-xml-string]
-  (.loadSvg (SvgLoader.) (string-&gt;stream svg-xml-string)))</pre></td></tr><tr><td class="docs"><h2>Vandermonde Matrix</h2>
-
-<p>We want to solve for a polynomial that will fit all the given points</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>set the core.matrix backend</p>
-</td><td class="codes"><pre class="brush: clojure">(matrix/set-current-implementation :vectorz)</pre></td></tr><tr><td class="docs"><p>Take a vector of numbers [a b c d ..] and makes an indexed-pair version
-  [[0 a] [1 b] [2 c] [3 d] ..]</p>
-
-<p>the polynomial for each point is of the form:
-a0 + a1 x + a2 x^2 + a3 x^3 + ... = y
-So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
-</td><td class="codes"><pre class="brush: clojure">(defn index-vector
-  ([vector]
-   (index-vector vector (count vector)))
-  ([vector length]
-   (map (fn [i] [i (get vector i)]) (range 0  length))))</pre></td></tr><tr><td class="docs"><p>Given an <strong>x</strong>, generate a vector of [x x^2 x^3 .. x^LENGTH]</p>
-</td><td class="codes"><pre class="brush: clojure">(defn polynomial-vector
-  [x length]
-  (map #(math/expt x %) (range 0 length)))</pre></td></tr><tr><td class="docs"><p>Wrapper for the previous function that puts it in a row-matrix</p>
-</td><td class="codes"><pre class="brush: clojure">(defn polynomial-row
-  [x length]
-  (matrix/row-matrix (polynomial-vector x length)))</pre></td></tr><tr><td class="docs"><p>Take a vector of x's and build a vandermonde matrix</p>
-</td><td class="codes"><pre class="brush: clojure">(defn vandermonde-matrix
-  [x]
-  (let [length (count x)
-        vandermonde-rows (map #(polynomial-row % length) x)]
-    (matrix/matrix (reduce (fn [matrix next-row] (matrix/join matrix next-row)) vandermonde-rows))))</pre></td></tr><tr><td class="docs"><p>Given several points, return a polynomial function (given an x, returns a y)</p>
-</td><td class="codes"><pre class="brush: clojure">(defn fit-polynomial
-  [points]
-  (let [xs (map first points)
-        ys (map second points)
-        polynomial-factors (matrix-linear/solve (vandermonde-matrix xs) (matrix/array ys))
-        indexed-polynomial-factors (index-vector (matrix/to-nested-vectors polynomial-factors))]
-    (fn [x] [x (reduce
-                (fn [accumulated-value next-exponent]
-                  (+ accumulated-value
-                     (* (second next-exponent) (math/expt x (first next-exponent)))))
-                0
-                indexed-polynomial-factors)])))</pre></td></tr><tr><td class="docs"><h2>Plots</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Given a size (WIDTH HEIGHT) the output <em>spec</em> describes how the plot looks.
-  More detail are in <strong>geom-viz</strong>.
-  The data has been left initialized</p>
-</td><td class="codes"><pre class="brush: clojure">(defn plot-spec
-  [points width height]
-  {:x-axis (viz/linear-axis
-            {:domain [0 width]
-             :range  [0 width]
-             ;; puts the axis out of view (can't show the grid with no axis)
-             :pos    -100 
-             :major 100
-             })
-   :y-axis (viz/linear-axis
-            {:domain      [0 height]
-             :range       [0 height]
-             ;; puts the axis out of view (can't show the grid with no axis)
-             :pos         -100 
-             :label-dist  0
-             :major 100
-             :label-style {:text-anchor &quot;end&quot;}
-             })
-   :grid   {:attribs {:stroke &quot;#caa&quot;}
-            :minor-x false
-            :minor-y false}
-   :data   [{:values  (map (fit-polynomial points) (range 10000))
-             :attribs {:fill &quot;none&quot; :stroke &quot;#0af&quot; :stroke-width 2.25}
-             :layout  viz/svg-line-plot}
-            {:values  nil
-             :attribs {:fill &quot;none&quot; :stroke &quot;#f60&quot; :stroke-width 2.25}
-             :shape   (viz/svg-triangle-down 6)
-             :layout  viz/svg-scatter-plot}]})</pre></td></tr><tr><td class="docs"><p>Adds data (POINTS) to the spec and generates an SVG</p>
-</td><td class="codes"><pre class="brush: clojure">(defn plot-points
-  [points output-width output-height]
-  (print points)
-  (svg-to-javafx-group  (-&gt; (plot-spec points output-width output-height)
-                            (assoc-in  [:data 1 :values] points)
-                             (viz/svg-plot2d-cartesian)
-                             (#(svgthing/svg {:width output-width
-                                              :height output-height}
-                                             %))
-                             (svgthing/serialize))))</pre></td></tr><tr><td class="docs"><h2>ClickyGraph</h2>
+    (:event event)))</pre></td></tr><tr><td class="docs"><h2>ClickyGraph</h2>
 
 <p>The area of the window where you click to add point.
 The points are accumulated into the state map
@@ -2994,7 +2898,7 @@ and are then are used to generate a plot</p>
           (ui/pane
            :on-mouse-pressed {:event :mouse-click ;; this part is black-magic
                               :fn-fx/include {:fn-fx/event #{:x :y}}} 
-           :children [(plot-points points width height)])))</pre></td></tr><tr><td class="docs">
+           :children [(plot/plot-points points width height)])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod handle-event :mouse-click
   [state {:keys [fn-fx/includes]}]
   (let [{:keys [x y]} (:fn-fx/event includes)]
@@ -3066,7 +2970,110 @@ The eventhandler multimethod itself will generate new states</li>
                                 old-ui
                                 (stage @data-state))
                                (catch Throwable ex
-                                 (println ex)))))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_asparapiss.core">asparapiss.core</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+                                 (println ex)))))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.svg2jfx" name="asparapiss.svg2jfx"><h1 class="project-name">asparapiss.svg2jfx</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns asparapiss.svg2jfx
+   (:import  [afester.javafx.svg SvgLoader]))</pre></td></tr><tr><td class="docs"><h1>Converting SVGs to JavaFX objects</h1>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Takes a string and turns it into an input stream</p>
+</td><td class="codes"><pre class="brush: clojure">(defn string-&gt;stream
+  ([s] (string-&gt;stream s &quot;UTF-8&quot;))
+  ([s encoding]
+   (-&gt; s
+       (.getBytes encoding)
+       (java.io.ByteArrayInputStream.))))</pre></td></tr><tr><td class="docs"><p>Use the FranzXaver library to turn a string of XML describing an SVG 
+  into a JavaFX compatible Group Node (which shows up as a picture)
+  This is using Batik under the hood somehow</p>
+</td><td class="codes"><pre class="brush: clojure">(defn svg-to-javafx-group
+  [svg-xml-string]
+  (.loadSvg (SvgLoader.) (string-&gt;stream svg-xml-string)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.math" name="asparapiss.math"><h1 class="project-name">asparapiss.math</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns asparapiss.math
+  (:require [clojure.math.numeric-tower :as math]
+            [clojure.core.matrix :as matrix]
+            [clojure.core.matrix.linear :as matrix-linear]))</pre></td></tr><tr><td class="docs"><h2>Vandermonde Matrix</h2>
+
+<p>We want to solve for a polynomial that will fit all the given points</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>set the core.matrix backend</p>
+</td><td class="codes"><pre class="brush: clojure">(matrix/set-current-implementation :vectorz)</pre></td></tr><tr><td class="docs"><p>Take a vector of numbers [a b c d ..] and makes an indexed-pair version
+  [[0 a] [1 b] [2 c] [3 d] ..]</p>
+
+<p>the polynomial for each point is of the form:
+a0 + a1 x + a2 x^2 + a3 x^3 + ... = y
+So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
+</td><td class="codes"><pre class="brush: clojure">(defn index-vector
+  ([vector]
+   (index-vector vector (count vector)))
+  ([vector length]
+   (map (fn [i] [i (get vector i)]) (range 0  length))))</pre></td></tr><tr><td class="docs"><p>Given an <strong>x</strong>, generate a vector of [x x^2 x^3 .. x^LENGTH]</p>
+</td><td class="codes"><pre class="brush: clojure">(defn polynomial-vector
+  [x length]
+  (map #(math/expt x %) (range 0 length)))</pre></td></tr><tr><td class="docs"><p>Wrapper for the previous function that puts it in a row-matrix</p>
+</td><td class="codes"><pre class="brush: clojure">(defn polynomial-row
+  [x length]
+  (matrix/row-matrix (polynomial-vector x length)))</pre></td></tr><tr><td class="docs"><p>Take a vector of x's and build a vandermonde matrix</p>
+</td><td class="codes"><pre class="brush: clojure">(defn vandermonde-matrix
+  [x]
+  (let [length (count x)
+        vandermonde-rows (map #(polynomial-row % length) x)]
+    (matrix/matrix (reduce (fn [matrix next-row] (matrix/join matrix next-row)) vandermonde-rows))))</pre></td></tr><tr><td class="docs"><p>Given several points, return a polynomial function (given an x, returns a y)</p>
+</td><td class="codes"><pre class="brush: clojure">(defn fit-polynomial
+  [points]
+  (let [xs (map first points)
+        ys (map second points)
+        polynomial-factors (matrix-linear/solve (vandermonde-matrix xs) (matrix/array ys))
+        indexed-polynomial-factors (index-vector (matrix/to-nested-vectors polynomial-factors))]
+    (fn [x] [x (reduce
+                (fn [accumulated-value next-exponent]
+                  (+ accumulated-value
+                     (* (second next-exponent) (math/expt x (first next-exponent)))))
+                0
+                indexed-polynomial-factors)])))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.plot" name="asparapiss.plot"><h1 class="project-name">asparapiss.plot</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns asparapiss.plot
+  (:require [asparapiss.math :as math]
+            [asparapiss.svg2jfx :as svg2jfx]
+            [thi.ng.geom.core :as g] ;; The graphing libraires
+            [thi.ng.math.core :as m]
+            [thi.ng.geom.viz.core :as viz]
+            [thi.ng.geom.svg.core :as svgthing]))</pre></td></tr><tr><td class="docs"><p>Given a size (WIDTH HEIGHT) the output <em>spec</em> describes how the plot looks.
+  More detail are in <strong>geom-viz</strong>.
+  The data has been left initialized</p>
+</td><td class="codes"><pre class="brush: clojure">(defn plot-spec
+  [points width height]
+  {:x-axis (viz/linear-axis
+            {:domain [0 width]
+             :range  [0 width]
+             ;; puts the axis out of view (can't show the grid with no axis)
+             :pos    -100 
+             :major 100
+             })
+   :y-axis (viz/linear-axis
+            {:domain      [0 height]
+             :range       [0 height]
+             ;; puts the axis out of view (can't show the grid with no axis)
+             :pos         -100 
+             :label-dist  0
+             :major 100
+             :label-style {:text-anchor &quot;end&quot;}
+             })
+   :grid   {:attribs {:stroke &quot;#caa&quot;}
+            :minor-x false
+            :minor-y false}
+   :data   [{:values  nil
+             :attribs {:fill &quot;none&quot; :stroke &quot;#0af&quot; :stroke-width 2.25}
+             :layout  viz/svg-line-plot}
+            {:values  nil
+             :attribs {:fill &quot;none&quot; :stroke &quot;#f60&quot; :stroke-width 2.25}
+             :shape   (viz/svg-triangle-down 6)
+             :layout  viz/svg-scatter-plot}]})</pre></td></tr><tr><td class="docs"><p>Adds data (POINTS) to the spec and generates an SVG</p>
+</td><td class="codes"><pre class="brush: clojure">(defn plot-points
+  [points output-width output-height]
+  (print points)
+  (svg2jfx/svg-to-javafx-group  (-&gt; (plot-spec points output-width output-height)
+                                    (assoc-in  [:data 0 :values] (map (math/fit-polynomial points) (range 10000)))
+                                    (assoc-in  [:data 1 :values] points)
+                                    (viz/svg-plot2d-cartesian)
+                                    (#(svgthing/svg {:width output-width
+                                                     :height output-height}
+                                                    %))
+                                    (svgthing/serialize))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_asparapiss.core">asparapiss.core</li><li class="floating-toc-li" id="floating-toc_asparapiss.svg2jfx">asparapiss.svg2jfx</li><li class="floating-toc-li" id="floating-toc_asparapiss.math">asparapiss.math</li><li class="floating-toc-li" id="floating-toc_asparapiss.plot">asparapiss.plot</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
