@@ -70,3 +70,19 @@
                                        index-vector)]
     (polynomial-function indexed-polynomial-factors)))
 
+(defn least-squares-polynomial
+  "Fit a polynomial of a given degree using a naiive least-squares solution
+  of the form A^T*A=A^Tb"
+  [points degree]
+  (let [xs (map first points)
+        ys (map second points)
+        A (vandermonde-matrix xs degree)
+        AT (matrix/transpose A)
+        ATA (matrix/mmul AT A)
+        ATb (matrix/to-vector (matrix/mmul AT (matrix/column-matrix ys)))
+        polynomial-factors (matrix-linear/solve ATA
+                                                ATb)
+        indexed-polynomial-factors (-> polynomial-factors
+                                       matrix/to-nested-vectors
+                                       index-vector)]
+    (polynomial-function indexed-polynomial-factors)))
