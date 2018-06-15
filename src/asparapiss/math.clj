@@ -42,6 +42,21 @@
       (reduce (fn [matrix next-row] (matrix/join matrix next-row))
               vandermonde-rows)))))
 
+(defn polynomial-function
+  "Given polynomial factors, return the polynomial function
+  (ie. given x, returns y)
+  polynomial factors : a0 a1 a2 a3 ...
+  function returned:
+  y = a0 +a1x + a2x^2 + a3x^3 ..."
+[indexed-polynomial-factors]
+  (fn [x] [x (reduce
+              (fn [accumulated-value next-exponent]
+                (+ accumulated-value
+                   (* (second next-exponent)
+                      (math/expt x (first next-exponent)))))
+              0
+              indexed-polynomial-factors)]))
+
 (defn fit-polynomial
   "Given several points, return a polynomial function (given an x, returns a y)"
   [points]
@@ -53,11 +68,5 @@
         indexed-polynomial-factors (-> polynomial-factors
                                        matrix/to-nested-vectors
                                        index-vector)]
+    (polynomial-function indexed-polynomial-factors)))
 
-    (fn [x] [x (reduce
-                (fn [accumulated-value next-exponent]
-                  (+ accumulated-value
-                     (* (second next-exponent)
-                        (math/expt x (first next-exponent)))))
-                0
-                indexed-polynomial-factors)])))
