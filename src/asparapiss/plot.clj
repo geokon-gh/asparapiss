@@ -40,12 +40,11 @@
 
 (defn plot-points
   "Adds data (POINTS) to the spec and generates an SVG"
-  [points output-width output-height]
-  (print points)
+  [points degree output-width output-height]
   (svg2jfx/svg-to-javafx-group
    (-> (plot-spec points output-width output-height)
        (assoc-in  [:data 0 :values]
-                  (map (math/fit-polynomial points) (range 10000)))
+                  (map (math/least-squares-polynomial points degree) (range 10000)))
        (assoc-in  [:data 1 :values]
                   points)
        (viz/svg-plot2d-cartesian)

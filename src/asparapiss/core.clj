@@ -32,23 +32,26 @@
 ;; and are then are used to generate a plot
 
 (defui ClickyGraph
-  (render [this {:keys [width height points]}]
+  (render [this {:keys [width height points degree]}]
           (ui/pane
            :on-mouse-pressed {:event :mouse-click ;; this part is black-magic
                               :fn-fx/include {:fn-fx/event #{:x :y}}} 
-           :children [(plot/plot-points points width height)])))
+           :children [(plot/plot-points points degree width height)])))
 
 (defmethod handle-event :mouse-click
   [state {:keys [fn-fx/includes]}]
   (let [{:keys [x y]} (:fn-fx/event includes)]
-    (update-in state [:points] conj [x y])))
+    (cond (and (> x 0) (> y 0))
+          (update-in state [:points] conj [x y])
+          :else
+          state)))
 
 ;; ## MainWindow
 ;; the root node of the scene-graph. It will track the scene size
 ;; and redraw the plot when it changes
 
 (defui MainWindow
-  (render [this args];this {:keys [points]}]
+  (render [this args];{:keys [points]}]
           (ui/v-box
            :id ::graph
            :style
@@ -58,10 +61,18 @@
                            :fn-fx/include {::graph #{:height}}} 
            :listen/width {:event :resize-width
                           :fn-fx/include {::graph #{:width}}}
-           :children [(ui/text-field
-                       :id ::new-item
-                       :prompt-text "Asparapiss"
-                       :font main-font)
+           :children [(ui/slider
+                       :id ::degree-spinner
+                       :min 0
+                       :max (double (count (:points args)))
+                       :show-tick-marks true
+                       :show-tick-labels true
+                       :major-tick-unit 1
+                       :block-increment 1
+                       :value (:degree args)
+                       :listen/value {:event :change-degree ;; more black-magic
+                                       :fn-fx/include {::degree-spinner #{:value}}} 
+)
                       (clicky-graph args)])))
 
 (defmethod handle-event :resize-width
@@ -71,6 +82,10 @@
 (defmethod handle-event :resize-height
   [state {:keys [fn-fx/includes]}]
   (assoc-in state [:height] (get-in includes [::graph :height])))
+
+(defmethod handle-event :change-degree
+  [state {:keys [fn-fx/includes]}]
+  (assoc-in state [:degree] (get-in includes [::degree-spinner :value])))
 
 ;; ## Stage
 ;; the JavaFX top level container that stands for a window
@@ -97,7 +112,8 @@
   []
   (let [data-state (atom {:width 500.0
                           :height 500.0
-                          :points [[0 0]]})
+                          :points [];[[0 0][100 100][200 200]]
+                          :degree 0})
         handler-fn (fn [event]
                      (try
                        (swap! data-state handle-event event)

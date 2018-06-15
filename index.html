@@ -2894,21 +2894,24 @@ The points are accumulated into the state map
 and are then are used to generate a plot</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defui ClickyGraph
-  (render [this {:keys [width height points]}]
+  (render [this {:keys [width height points degree]}]
           (ui/pane
            :on-mouse-pressed {:event :mouse-click ;; this part is black-magic
                               :fn-fx/include {:fn-fx/event #{:x :y}}} 
-           :children [(plot/plot-points points width height)])))</pre></td></tr><tr><td class="docs">
+           :children [(plot/plot-points points degree width height)])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod handle-event :mouse-click
   [state {:keys [fn-fx/includes]}]
   (let [{:keys [x y]} (:fn-fx/event includes)]
-    (update-in state [:points] conj [x y])))</pre></td></tr><tr><td class="docs"><h2>MainWindow</h2>
+    (cond (and (&gt; x 0) (&gt; y 0))
+          (update-in state [:points] conj [x y])
+          :else
+          state)))</pre></td></tr><tr><td class="docs"><h2>MainWindow</h2>
 
 <p>the root node of the scene-graph. It will track the scene size
 and redraw the plot when it changes</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defui MainWindow
-  (render [this args];this {:keys [points]}]
+  (render [this args];{:keys [points]}]
           (ui/v-box
            :id ::graph
            :style
@@ -2918,17 +2921,27 @@ and redraw the plot when it changes</p>
                            :fn-fx/include {::graph #{:height}}} 
            :listen/width {:event :resize-width
                           :fn-fx/include {::graph #{:width}}}
-           :children [(ui/text-field
-                       :id ::new-item
-                       :prompt-text &quot;Asparapiss&quot;
-                       :font main-font)
+           :children [(ui/slider
+                       :id ::degree-spinner
+                       :min 0
+                       :max (double (count (:points args)))
+                       :show-tick-marks true
+                       :show-tick-labels true
+                       :major-tick-unit 1
+                       :block-increment 1
+                       :value (:degree args)
+                       :listen/value {:event :change-degree ;; more black-magic
+                                       :fn-fx/include {::degree-spinner #{:value}}} )
                       (clicky-graph args)])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod handle-event :resize-width
   [state {:keys [fn-fx/includes]}]
   (assoc-in state [:width] (get-in includes [::graph :width])))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod handle-event :resize-height
   [state {:keys [fn-fx/includes]}]
-  (assoc-in state [:height] (get-in includes [::graph :height])))</pre></td></tr><tr><td class="docs"><h2>Stage</h2>
+  (assoc-in state [:height] (get-in includes [::graph :height])))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defmethod handle-event :change-degree
+  [state {:keys [fn-fx/includes]}]
+  (assoc-in state [:degree] (get-in includes [::degree-spinner :value])))</pre></td></tr><tr><td class="docs"><h2>Stage</h2>
 
 <p>the JavaFX top level container that stands for a window
 The stage has a scene container for all content ie. a scene-graph of nodes.
@@ -2954,7 +2967,8 @@ The eventhandler multimethod itself will generate new states</li>
   []
   (let [data-state (atom {:width 500.0
                           :height 500.0
-                          :points [[0 0]]})
+                          :points [];[[0 0][100 100][200 200]]
+                          :degree 0})
         handler-fn (fn [event]
                      (try
                        (swap! data-state handle-event event)
@@ -3018,23 +3032,52 @@ So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
    (let [vandermonde-rows (map #(polynomial-row % degree) x)]
      (matrix/matrix
       (reduce (fn [matrix next-row] (matrix/join matrix next-row))
-              vandermonde-rows)))))</pre></td></tr><tr><td class="docs"><p>Given several points, return a polynomial function (given an x, returns a y)</p>
+              vandermonde-rows)))))</pre></td></tr><tr><td class="docs"><p>Given polynomial factors, return the polynomial function
+  (ie. given x, returns y)
+  polynomial factors : a0 a1 a2 a3 ...
+  function returned:
+  y = a0 +a1x + a2x^2 + a3x^3 ...</p>
+</td><td class="codes"><pre class="brush: clojure">(defn polynomial-function
+[indexed-polynomial-factors]
+  (fn [x] [x (reduce
+              (fn [accumulated-value next-exponent]
+                (+ accumulated-value
+                   (* (second next-exponent)
+                      (math/expt x (first next-exponent)))))
+              0
+              indexed-polynomial-factors)]))</pre></td></tr><tr><td class="docs"><p>Given several points, return a polynomial function (given an x, returns a y)</p>
 </td><td class="codes"><pre class="brush: clojure">(defn fit-polynomial
   [points]
-  (let [xs (map first points)
-        ys (map second points)
-        polynomial-factors
-        (matrix-linear/solve (vandermonde-matrix xs)
-                             (matrix/array ys))
-        indexed-polynomial-factors
-        (index-vector (matrix/to-nested-vectors polynomial-factors))]
-    (fn [x] [x (reduce
-                (fn [accumulated-value next-exponent]
-                  (+ accumulated-value
-                     (* (second next-exponent)
-                        (math/expt x (first next-exponent)))))
-                0
-                indexed-polynomial-factors)])))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.plot" name="asparapiss.plot"><h1 class="project-name">asparapiss.plot</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  (cond (empty? points) ;; degenerate case
+        (fn [x] [x 0.0])
+        :else
+        (let [xs (map first points)
+              ys (map second points)
+              polynomial-factors
+              (matrix-linear/solve (vandermonde-matrix xs)
+                                   (matrix/array ys))
+              indexed-polynomial-factors (-&gt; polynomial-factors
+                                             matrix/to-nested-vectors
+                                             index-vector)]
+          (polynomial-function indexed-polynomial-factors))))</pre></td></tr><tr><td class="docs"><p>Fit a polynomial of a given degree using a naiive least-squares solution
+  of the form A^T*A=A^Tb</p>
+</td><td class="codes"><pre class="brush: clojure">(defn least-squares-polynomial
+  [points degree]
+  (cond (&lt; degree 1) ;; degenerate case
+        (fn [x] [x 0.0])
+        :else
+        (let [xs (map first points)
+              ys (map second points)
+              A (vandermonde-matrix xs degree)
+              AT (matrix/transpose A)
+              ATA (matrix/mmul AT A)
+              ATb (matrix/to-vector (matrix/mmul AT (matrix/column-matrix ys)))
+              polynomial-factors (matrix-linear/solve ATA
+                                                      ATb)
+              indexed-polynomial-factors (-&gt; polynomial-factors
+                                             matrix/to-nested-vectors
+                                             index-vector)]
+          (polynomial-function indexed-polynomial-factors))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.plot" name="asparapiss.plot"><h1 class="project-name">asparapiss.plot</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns asparapiss.plot
   (:require [asparapiss.math :as math]
             [asparapiss.svg2jfx :as svg2jfx]
@@ -3073,12 +3116,11 @@ So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
              :shape   (viz/svg-triangle-down 6)
              :layout  viz/svg-scatter-plot}]})</pre></td></tr><tr><td class="docs"><p>Adds data (POINTS) to the spec and generates an SVG</p>
 </td><td class="codes"><pre class="brush: clojure">(defn plot-points
-  [points output-width output-height]
-  (print points)
+  [points degree output-width output-height]
   (svg2jfx/svg-to-javafx-group
    (-&gt; (plot-spec points output-width output-height)
        (assoc-in  [:data 0 :values]
-                  (map (math/fit-polynomial points) (range 10000)))
+                  (map (math/least-squares-polynomial points degree) (range 10000)))
        (assoc-in  [:data 1 :values]
                   points)
        (viz/svg-plot2d-cartesian)
