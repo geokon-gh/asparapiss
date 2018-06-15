@@ -60,29 +60,35 @@
 (defn fit-polynomial
   "Given several points, return a polynomial function (given an x, returns a y)"
   [points]
-  (let [xs (map first points)
-        ys (map second points)
-        polynomial-factors
-        (matrix-linear/solve (vandermonde-matrix xs)
-                             (matrix/array ys))
-        indexed-polynomial-factors (-> polynomial-factors
-                                       matrix/to-nested-vectors
-                                       index-vector)]
-    (polynomial-function indexed-polynomial-factors)))
+  (cond (empty? points) ;; degenerate case
+        (fn [x] [x 0.0])
+        :else
+        (let [xs (map first points)
+              ys (map second points)
+              polynomial-factors
+              (matrix-linear/solve (vandermonde-matrix xs)
+                                   (matrix/array ys))
+              indexed-polynomial-factors (-> polynomial-factors
+                                             matrix/to-nested-vectors
+                                             index-vector)]
+          (polynomial-function indexed-polynomial-factors))))
 
 (defn least-squares-polynomial
   "Fit a polynomial of a given degree using a naiive least-squares solution
   of the form A^T*A=A^Tb"
   [points degree]
-  (let [xs (map first points)
-        ys (map second points)
-        A (vandermonde-matrix xs degree)
-        AT (matrix/transpose A)
-        ATA (matrix/mmul AT A)
-        ATb (matrix/to-vector (matrix/mmul AT (matrix/column-matrix ys)))
-        polynomial-factors (matrix-linear/solve ATA
-                                                ATb)
-        indexed-polynomial-factors (-> polynomial-factors
-                                       matrix/to-nested-vectors
-                                       index-vector)]
-    (polynomial-function indexed-polynomial-factors)))
+  (cond (< degree 1) ;; degenerate case
+        (fn [x] [x 0.0])
+        :else
+        (let [xs (map first points)
+              ys (map second points)
+              A (vandermonde-matrix xs degree)
+              AT (matrix/transpose A)
+              ATA (matrix/mmul AT A)
+              ATb (matrix/to-vector (matrix/mmul AT (matrix/column-matrix ys)))
+              polynomial-factors (matrix-linear/solve ATA
+                                                      ATb)
+              indexed-polynomial-factors (-> polynomial-factors
+                                             matrix/to-nested-vectors
+                                             index-vector)]
+          (polynomial-function indexed-polynomial-factors))))
