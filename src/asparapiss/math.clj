@@ -50,8 +50,9 @@
         polynomial-factors
         (matrix-linear/solve (vandermonde-matrix xs)
                              (matrix/array ys))
-        indexed-polynomial-factors
-        (index-vector (matrix/to-nested-vectors polynomial-factors))]
+        indexed-polynomial-factors (-> polynomial-factors
+                                       matrix/to-nested-vectors
+                                       index-vector)]
 
     (fn [x] [x (reduce
                 (fn [accumulated-value next-exponent]
