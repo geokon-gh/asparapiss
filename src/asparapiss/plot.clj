@@ -31,12 +31,15 @@
             :minor-x false
             :minor-y false}
    :data   [{:values  nil
+             :attribs {:fill "none" :stroke "#f60" :stroke-width 2.25}
+             :shape   (viz/svg-triangle-down 6)
+             :layout  viz/svg-scatter-plot}
+            {:values  nil
              :attribs {:fill "none" :stroke "#0af" :stroke-width 2.25}
              :layout  viz/svg-line-plot}
             {:values  nil
-             :attribs {:fill "none" :stroke "#f60" :stroke-width 2.25}
-             :shape   (viz/svg-triangle-down 6)
-             :layout  viz/svg-scatter-plot}]})
+             :attribs {:fill "none" :stroke "#0ff" :stroke-width 2.25}
+             :layout  viz/svg-line-plot}]})
 
 (defn plot-points
   "Adds data (POINTS) to the spec and generates an SVG"
@@ -44,9 +47,11 @@
   (svg2jfx/svg-to-javafx-group
    (-> (plot-spec points output-width output-height)
        (assoc-in  [:data 0 :values]
-                  (map (math/least-squares-polynomial points degree) (range 10000)))
-       (assoc-in  [:data 1 :values]
                   points)
+       (assoc-in  [:data 1 :values]
+                  (map (math/least-squares-polynomial points degree) (range 10000)))
+       (assoc-in  [:data 2 :values]
+                  (map (math/least-squares-polynomial-unstable points degree) (range 10000)))
        (viz/svg-plot2d-cartesian)
        (#(svgthing/svg {:width output-width
                         :height output-height}
