@@ -3061,7 +3061,7 @@ So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
                                              index-vector)]
           (polynomial-function indexed-polynomial-factors))))</pre></td></tr><tr><td class="docs"><p>Fit a polynomial of a given degree using a naiive least-squares solution
   of the form A^T*A=A^Tb</p>
-</td><td class="codes"><pre class="brush: clojure">(defn least-squares-polynomial
+</td><td class="codes"><pre class="brush: clojure">(defn least-squares-polynomial-unstable
   [points degree]
   (cond (&lt; degree 1) ;; degenerate case
         (fn [x] [x 0.0])
@@ -3077,6 +3077,35 @@ So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
               indexed-polynomial-factors (-&gt; polynomial-factors
                                              matrix/to-nested-vectors
                                              index-vector)]
+          (polynomial-function indexed-polynomial-factors))))</pre></td></tr><tr><td class="docs"><p>Fit a polynomial of a given degree using a naiive least-squares solution
+  of the form A^T*A=A^Tb</p>
+</td><td class="codes"><pre class="brush: clojure">(defn least-squares-polynomial
+  [points degree]
+  (cond (&lt; degree 1) ;; degenerate case
+        (fn [x] [x 0.0])
+        :else
+        (let [xs (map first points)
+              ys (map second points)
+              number-of-points (count points)
+              A (vandermonde-matrix xs degree)
+              AT (matrix/transpose A)
+              I (matrix/identity-matrix number-of-points)
+              zeroes (matrix/zero-matrix degree degree)
+              first-block-row (matrix/join-along 1 I A)
+              second-block-row (matrix/join-along 1 AT zeroes)
+              least-squares-matrix (matrix/matrix (matrix/join-along
+                                                   0
+                                                   first-block-row
+                                                   second-block-row))
+              output-vector (matrix/to-vector (matrix/join (matrix/column-matrix ys)
+                                                        (matrix/zero-matrix degree 1)))
+              solution (matrix-linear/solve least-squares-matrix
+                                            output-vector)
+              polynomial-factors (matrix/submatrix solution number-of-points degree 0 1)
+              indexed-polynomial-factors (-&gt; polynomial-factors
+                                             matrix/to-nested-vectors
+                                             index-vector)
+              ]
           (polynomial-function indexed-polynomial-factors))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.plot" name="asparapiss.plot"><h1 class="project-name">asparapiss.plot</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns asparapiss.plot
   (:require [asparapiss.math :as math]

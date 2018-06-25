@@ -73,7 +73,7 @@
                                              index-vector)]
           (polynomial-function indexed-polynomial-factors))))
 
-(defn least-squares-polynomial
+(defn least-squares-polynomial-unstable
   "Fit a polynomial of a given degree using a naiive least-squares solution
   of the form A^T*A=A^Tb"
   [points degree]
@@ -91,4 +91,36 @@
               indexed-polynomial-factors (-> polynomial-factors
                                              matrix/to-nested-vectors
                                              index-vector)]
+          (polynomial-function indexed-polynomial-factors))))
+
+
+(defn least-squares-polynomial
+  "Fit a polynomial of a given degree using a naiive least-squares solution
+  of the form A^T*A=A^Tb"
+  [points degree]
+  (cond (< degree 1) ;; degenerate case
+        (fn [x] [x 0.0])
+        :else
+        (let [xs (map first points)
+              ys (map second points)
+              number-of-points (count points)
+              A (vandermonde-matrix xs degree)
+              AT (matrix/transpose A)
+              I (matrix/identity-matrix number-of-points)
+              zeroes (matrix/zero-matrix degree degree)
+              first-block-row (matrix/join-along 1 I A)
+              second-block-row (matrix/join-along 1 AT zeroes)
+              least-squares-matrix (matrix/matrix (matrix/join-along
+                                                   0
+                                                   first-block-row
+                                                   second-block-row))
+              output-vector (matrix/to-vector (matrix/join (matrix/column-matrix ys)
+                                                        (matrix/zero-matrix degree 1)))
+              solution (matrix-linear/solve least-squares-matrix
+                                            output-vector)
+              polynomial-factors (matrix/submatrix solution number-of-points degree 0 1)
+              indexed-polynomial-factors (-> polynomial-factors
+                                             matrix/to-nested-vectors
+                                             index-vector)
+              ]
           (polynomial-function indexed-polynomial-factors))))
