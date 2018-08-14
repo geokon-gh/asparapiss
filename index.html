@@ -2866,7 +2866,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>asparapiss -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="http://geokon-gh.github.io/asparapiss/">asparapiss</a></h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>Plot lines that fit points</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.4</td></tr><tr><td class="dep-name">net.mikera/core.matrix</td><td class="dotted"><hr /></td><td class="dep-version">0.62.0</td></tr><tr><td class="dep-name">net.mikera/vectorz-clj</td><td class="dotted"><hr /></td><td class="dep-version">0.47.0</td></tr><tr><td class="dep-name">halgari/fn-fx</td><td class="dotted"><hr /></td><td class="dep-version">0.4.0</td></tr><tr><td class="dep-name">com.github.afester.javafx/FranzXaver</td><td class="dotted"><hr /></td><td class="dep-version">0.1</td></tr><tr><td class="dep-name">thi.ng/geom-viz</td><td class="dotted"><hr /></td><td class="dep-version">0.0.908</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#asparapiss.core">asparapiss.core</a></li><li><a href="#asparapiss.svg2jfx">asparapiss.svg2jfx</a></li><li><a href="#asparapiss.math">asparapiss.math</a></li><li><a href="#asparapiss.plot">asparapiss.plot</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.core" name="asparapiss.core"><h1 class="project-name">asparapiss.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p><strong>JavaFX</strong> is used through the <a href="https://github.com/halgari/fn-fx"><strong>fn-fx</strong></a>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.4</td></tr><tr><td class="dep-name">net.mikera/core.matrix</td><td class="dotted"><hr /></td><td class="dep-version">0.62.0</td></tr><tr><td class="dep-name">net.mikera/vectorz-clj</td><td class="dotted"><hr /></td><td class="dep-version">0.47.0</td></tr><tr><td class="dep-name">halgari/fn-fx</td><td class="dotted"><hr /></td><td class="dep-version">0.4.0</td></tr><tr><td class="dep-name">com.github.afester.javafx/FranzXaver</td><td class="dotted"><hr /></td><td class="dep-version">0.1</td></tr><tr><td class="dep-name">thi.ng/geom-viz</td><td class="dotted"><hr /></td><td class="dep-version">0.0.908</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#asparapiss.core">asparapiss.core</a></li><li><a href="#asparapiss.math">asparapiss.math</a></li><li><a href="#asparapiss.plot">asparapiss.plot</a></li><li><a href="#asparapiss.svg2jfx">asparapiss.svg2jfx</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.core" name="asparapiss.core"><h1 class="project-name">asparapiss.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p><strong>JavaFX</strong> is used through the <a href="https://github.com/halgari/fn-fx"><strong>fn-fx</strong></a>
 library. When the application is run through <code>lein run</code> it should initialize
 the <strong>JavaFX</strong> GUI and <strong>fn-fx</strong> itself.</p>
 
@@ -2984,21 +2984,7 @@ The eventhandler multimethod itself will generate new states</li>
                                 old-ui
                                 (stage @data-state))
                                (catch Throwable ex
-                                 (println ex)))))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.svg2jfx" name="asparapiss.svg2jfx"><h1 class="project-name">asparapiss.svg2jfx</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns asparapiss.svg2jfx
-   (:import  [afester.javafx.svg SvgLoader]))</pre></td></tr><tr><td class="docs"><h1>Converting SVGs to JavaFX objects</h1>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Takes a string and turns it into an input stream</p>
-</td><td class="codes"><pre class="brush: clojure">(defn string-&gt;stream
-  ([s] (string-&gt;stream s &quot;UTF-8&quot;))
-  ([s encoding]
-   (-&gt; s
-       (.getBytes encoding)
-       (java.io.ByteArrayInputStream.))))</pre></td></tr><tr><td class="docs"><p>Use the FranzXaver library to turn a string of XML describing an SVG 
-  into a JavaFX compatible Group Node (which shows up as a picture)
-  This is using Batik under the hood somehow</p>
-</td><td class="codes"><pre class="brush: clojure">(defn svg-to-javafx-group
-  [svg-xml-string]
-  (.loadSvg (SvgLoader.) (string-&gt;stream svg-xml-string)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.math" name="asparapiss.math"><h1 class="project-name">asparapiss.math</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+                                 (println ex)))))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.math" name="asparapiss.math"><h1 class="project-name">asparapiss.math</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns asparapiss.math
   (:require [clojure.math.numeric-tower :as math]
             [clojure.core.matrix :as matrix]
@@ -3161,7 +3147,20 @@ So given an <em>x</em> we need to generate the polynomials x, x^2, x^3 ...</p>
        (#(svgthing/svg {:width output-width
                         :height output-height}
                        %))
-       (svgthing/serialize))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_asparapiss.core">asparapiss.core</li><li class="floating-toc-li" id="floating-toc_asparapiss.svg2jfx">asparapiss.svg2jfx</li><li class="floating-toc-li" id="floating-toc_asparapiss.math">asparapiss.math</li><li class="floating-toc-li" id="floating-toc_asparapiss.plot">asparapiss.plot</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+       (svgthing/serialize))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#asparapiss.svg2jfx" name="asparapiss.svg2jfx"><h1 class="project-name">asparapiss.svg2jfx</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns asparapiss.svg2jfx
+   (:import  [afester.javafx.svg SvgLoader]))</pre></td></tr><tr><td class="docs"><h2>Converting SVGs to JavaFX objects</h2>
+
+<p>Takes a string and turns it into an input stream</p>
+</td><td class="codes"><pre class="brush: clojure">(defn string-&gt;stream
+  ([s] (string-&gt;stream s &quot;UTF-8&quot;))
+  ([s encoding]
+   (-&gt; s
+       (.getBytes encoding)
+       (java.io.ByteArrayInputStream.))))</pre></td></tr><tr><td class="docs"><p>Use the FranzXaver library to turn a string of XML describing an SVG into a JavaFX compatible Group Node (which shows up as a picture) This is using Batik under the hood somehow   </p>
+</td><td class="codes"><pre class="brush: clojure">(defn svg-to-javafx-group
+  [svg-xml-string]
+  (.loadSvg (SvgLoader.) (string-&gt;stream svg-xml-string)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_asparapiss.core">asparapiss.core</li><li class="floating-toc-li" id="floating-toc_asparapiss.math">asparapiss.math</li><li class="floating-toc-li" id="floating-toc_asparapiss.plot">asparapiss.plot</li><li class="floating-toc-li" id="floating-toc_asparapiss.svg2jfx">asparapiss.svg2jfx</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
